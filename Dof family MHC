@@ -1,0 +1,630 @@
+#FUNCTIONS
+
+#Make function that compares alleles from mother and father
+#Are all the alleles same?
+allsame<-function(x){
+	if(x[1,1]=="NA"|x[1,2]=="NA"|x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	else if(x[1,1]== x[2,1]&x[1,1]==x[2,2]&x[1,2]==x[2,1]&x [1,2]==x[2,2]) (TRUE) 
+	else (FALSE)
+	}
+
+#Are all the alleles different?
+alldifferent<-function(x){
+	if(x[1,1]=="NA"|x[1,2]=="NA"|x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	else if(x[1,1]!= x[2,1]&x[1,1]!=x[2,2]&x[1,2]!=x[2,1]&x [1,2]!=x[2,2]) {return(TRUE)} 
+	else {return(FALSE)}
+	}
+
+
+#Is mother homozygous
+momsame<-function(x){
+	if(x[1,1]=="NA"|x[1,2]=="NA") {return("NA")}
+	else if(x[1,1]==x[1,2]){return( TRUE)} 
+	else {return(FALSE)}
+}
+
+#Is father homozygous
+dadsame<-function(x){ 
+	if(x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	else if(x[2,1]==x[2,2]){return( TRUE)} 
+	else {return(FALSE)}
+}
+
+#Expected homozygosity for progeny
+
+Hoe<-function(x){
+	nral<-length(unique(unlist(x)))
+	if(x[1,1]=="NA"|x[1,2]=="NA"|x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	if(nral==4) {return(0)}
+	if(nral==1) {return(1)}
+	if(nral==2 & x[1,1]==x[1,2] & x[2,1]==x[2,2]) {return(0)}
+	if(nral==2 & x[1,1]==x[1,2] & x[2,1]!=x[2,2]) {return(0.5)} #mom homozygous, dad heterozygous
+	if(nral==2 & x[2,1]==x[2,2] & x[1,1]!=x[1,2]) {return(0.5)} #dad homozygous, mom heterozygous
+	if(nral==2 & x[1,1]!=x[1,2] & x[2,1]!=x[2,2]) {return(0.5)} #both heterozygous for same alleles
+	if(nral==3 & x[1,1]==x[1,2]) {return(0)}
+	if(nral==3 & x[2,1]==x[2,2]) {return(0)}
+	if(nral==3 & x[1,1]!=x[1,2] & x[2,1]!=x[2,2]) {return(0.25)}
+}
+
+#Expected homozygosity = 0.5 for progeny, when mom homozygous and dad heterozygous
+Hoe0.5momhom<-function(x){
+	nral<-length(unique(unlist(x)))
+	if(x[1,1]=="NA"|x[1,2]=="NA"|x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	if(nral==2 & x[1,1]==x[1,2] & x[2,1]!=x[2,2]) {return(0.5)} #mom homozygous, dad heterozygous
+	else {return(0)}
+}
+
+#Expected homozygosity = 0.5 for progeny, when dad homozygous and mom heterozygous
+Hoe0.5dadhom<-function(x){
+	nral<-length(unique(unlist(x)))
+	if(x[1,1]=="NA"|x[1,2]=="NA"|x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	if(nral==2 & x[2,1]==x[2,2] & x[1,1]!=x[1,2]) {return(0.5)} #dad homozygous, mom heterozygous
+	else {return(0)}
+}
+
+#Expected homozygosity = 0.5 for progeny, when both parents heterozygous for same alleles
+Hoe0.5parhet<-function(x){
+	nral<-length(unique(unlist(x)))
+	if(x[1,1]=="NA"|x[1,2]=="NA"|x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	if(nral==2 & x[1,1]!=x[1,2] & x[2,1]!=x[2,2]) {return(0.5)} #both heterozygous for same alleles
+	else {return(0)}
+}
+
+#How many homozygous puppies in a litter? 
+pupsame<-function(x){
+	hompups<-sum(x[,1]==x[,2], na.rm=TRUE)
+	return(hompups)
+	}
+
+#How many heterozygous puppies in a litter? 
+pupdifferent<-function(x){
+	hetpups <-sum(x[,1]!=x[,2], na.rm=TRUE)
+	return(hetpups)
+	}
+
+#how many puppies in a litter?
+pupnumb<-function(x){
+	nrpup<-sum(x$Relation=="offspring")
+	return(nrpup)
+	}
+
+#Do the offspring and mother share both alleles (same allele inherited from father as mother has)?
+#when [Hoe0.5momhom==0.5]
+SharedAl0.5momhom <- function(x){
+	nral<-length(unique(unlist(x)))
+	if(x[1,1]=="NA"|x[1,2]=="NA"|x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	if(nral==1) (TRUE) 
+	else (FALSE)
+}
+
+#when [ExHoDRB==0.25]
+SharedAl0.25 <- function(x){
+	nral<-length(unique(unlist(x)))
+	if(x[1,1]=="NA"|x[1,2]=="NA"|x[2,1]=="NA"|x[2,2]=="NA") {return("NA")}
+	if(nral==2) (TRUE) 
+	else (FALSE)
+}
+
+
+
+#RUNNING THE FUNCTIONS
+
+#Read data, sequence name and sequence separated by a tab, change all but last column to characters
+
+dat<-read.table(file="FamilydataWGroupID.txt", header=TRUE, sep="\t",colClasses = c(rep("character",10),"numeric"))
+#dat<-
+#make matrixes for parents
+rownr<-sum(dat$Relation=="mother")
+SameMat<-matrix(nrow=rownr, ncol=3)
+colnames(SameMat) = c("DRB","DQA","DQB")
+DifferentMat<-matrix(nrow=rownr, ncol=3)
+colnames(DifferentMat) = c("DRB","DQA","DQB")
+MomsameMat<-matrix(nrow=rownr, ncol=3)
+colnames(MomsameMat) = c("DRB","DQA","DQB")
+DadsameMat<-matrix(nrow=rownr, ncol=3)
+colnames(DadsameMat) = c("DRB","DQA","DQB")
+
+nrpups<-vector(mode="numeric",length=length(unique(dat$FamilyID)))
+nrpups[nrpups==0]<-NA
+
+#Do calculations for different breeds/x-breeds (or pick by familyID) separately
+#dat<-dat[dat$FamilyID %in% c(1,2,14,100),]
+#dat<-dat[which(dat$GroupID=="Kromfohrlander"),]
+
+#Pick only families including male (m) OR female (f) offspring for analysis
+#FamilyIDWsex<-dat[which(dat$sex=="m"&dat$Relation=="offspring"),which(colnames(dat)=="FamilyID")]#males
+#FamilyIDWsex<-dat[which(dat$sex=="f"&dat$Relation=="offspring"),which(colnames(dat)=="FamilyID")]#females
+#nSex<-length(FamilyIDWsex)
+#familieswsex<-unique(FamilyIDWsex)
+#dattemp1 <- dat[dat$FamilyID %in% familieswsex,]
+#dat<-dattemp1[which(dattemp1$sex=="m"|dattemp1$Relation=="mother"|dattemp1$Relation=="father"),]#males
+#dat<-dattemp1[which(dattemp1$sex=="f"|dattemp1$Relation=="mother"|dattemp1$Relation=="father"),]#females
+
+#loop through families to find out how many puppies are in a litter
+
+families=unique(dat$FamilyID)
+for (k in families){
+	famdat<-dat[dat$FamilyID==k,]
+	nrpups[k]<-pupnumb(famdat)
+	}
+
+#Adding each offspring in a litter a serial number.
+dat["PupID"] <- NA
+
+a<-0
+for (k in families){
+	a <- (a+2+nrpups[k])		
+	for (j in 1:nrpups[k]){
+		if (k!=1) {dat[c(a-(nrpups[k])+j),which(colnames(dat)=="PupID")] <- (j)} 
+		else {dat[c(2+j),which(colnames(dat)=="PupID")] <- (j)}
+	}
+}
+
+#Parents (= missing values) to zero in "PupID" column:
+dat$PupID[is.na(dat$PupID)] <- 0
+
+
+#############################################
+
+#Only for amino acid analyses!
+
+#Replacing DRB1 and DRB2 alleles with DRB peptide binding region amino acid 
+#Tästä datasta puuttuu alleeli 015!!
+#PBR.data <- read.table(file="DogFamDRB_PBR_OnlyPolymForR.txt", header=TRUE, sep="\t", colClasses = c(rep("character",19)))
+
+#Match the PBR information to the allele data
+#matsi1<-match(dat[,1],PBR.data[,1])
+#matsi2<-match(dat[,2],PBR.data[,1])
+
+#Replace DRB alleles with amino acids
+
+#for (m in 1:18){
+#	dat$DRB1<-PBR.data[matsi1,(m+1)]
+#	dat$DRB2<-PBR.data[matsi2,(m+1)]
+
+
+
+############################################
+
+#Loop through each locus and pair of parents
+
+for (i in 1:3) { #kolme lokusta, 2 saraketta per lokus
+	for (k in families){
+		fam<-dat[dat$FamilyID==k,c((i*2-1),(i*2),which(colnames(dat)=="Relation"))]
+		fam[is.na(fam)]<-"NA"
+		parents<-fam[fam$Relation=="mother"|fam$Relation=="father",c(1,2)]
+		SameMat[k,i]<-allsame(parents)
+		DifferentMat[k,i]<-alldifferent(parents)
+		MomsameMat[k,i]<-momsame(parents)
+		DadsameMat[k,i]<-dadsame(parents)
+		}
+	}
+
+
+#Loop through each parent pair to estimate expected homozygosity in progeny
+#Loop through each parent pair to find families with expected heterozygosity 0.5 and mom homozygous
+#Loop through each parent pair to find families with expected heterozygosity 0.5 and dad homozygous
+#Loop through each parent pair to find families with expected heterozygosity 0.5 and parents heterozygous
+
+ExHo<-matrix(nrow=rownr, ncol=3)
+ExHo0.5momhom<-matrix(nrow=rownr, ncol=3)
+ExHo0.5dadhom<-matrix(nrow=rownr, ncol=3)
+ExHo0.5parhet<-matrix(nrow=rownr, ncol=3)
+
+for (i in 1:3) { #kolme lokusta, 2 saraketta per lokus
+	for (k in families){
+		fam<-dat[dat$FamilyID==k,c((i*2-1),(i*2),which(colnames(dat)=="Relation"))]
+		fam[is.na(fam)]<-"NA"
+		parents<-fam[fam$Relation=="mother"|fam$Relation=="father",c(1,2)]
+		print(parents)
+		print(paste("Expected proportion of homozygous offspring: ", Hoe(parents)))
+ 		print(paste("Exp prop of homoz. offspring if 2 parental alleles and mom homozygous: ", Hoe0.5momhom(parents)))
+ 		print(paste("Exp prop of homoz. offspring if 2 parental alleles and dad homozygous: ", Hoe0.5dadhom(parents)))
+ 		print(paste("Exp prop of homoz. offspring if 2 parental alleles and parents heterozygous: ", Hoe0.5parhet(parents)))
+		ExHo[k,i]<-Hoe(parents)
+		ExHo0.5momhom[k,i]<-Hoe0.5momhom(parents)
+		ExHo0.5dadhom[k,i]<-Hoe0.5dadhom(parents)
+		ExHo0.5parhet[k,i]<-Hoe0.5parhet(parents)
+		}
+	}
+
+
+#how many puppies in a litter are expected to be homozygous in total or with different parental combinations
+
+#Convert "NA" values to real missing values and the characters into numeric
+ExHo[,][ExHo[,]=="NA"]<-NA
+ExHo0.5momhom[,][ExHo0.5momhom[,]=="NA"]<-NA
+ExHo0.5dadhom[,][ExHo0.5dadhom[,]=="NA"]<-NA
+ExHo0.5parhet[,][ExHo0.5parhet[,]=="NA"]<-NA
+class(ExHo)<-"numeric"
+class(ExHo0.5momhom)<-"numeric"
+class(ExHo0.5dadhom)<-"numeric"
+class(ExHo0.5parhet)<-"numeric"
+
+ExHoNumb<-nrpups*ExHo
+ExHo0.5momhomNumb<-nrpups*ExHo0.5momhom
+ExHo0.5dadhomNumb<-nrpups*ExHo0.5dadhom
+ExHo0.5parhetNumb<-nrpups*ExHo0.5parhet
+
+#make matrix for offspring
+
+PupsameMat<-matrix(nrow=rownr, ncol=3)
+colnames(PupsameMat) = c("DRB","DQA","DQB")
+
+
+#loop through families to find how many puppies in a litter are homozygous
+
+for (i in 1:3) { #kolme lokusta, 2 saraketta per lokus
+	for (k in families){
+		fam<-dat[dat$FamilyID==k,c((i*2-1),(i*2), which(colnames(dat)=="Relation"))]
+		alloffspring<-fam[fam$Relation=="offspring",c(1,2)]
+		PupsameMat[k,i]<-pupsame(alloffspring)
+		}
+	}
+
+#make matrix for all observed homozygous puppies for different parental types
+
+ObsHoNumbPup<-matrix(nrow=4 , ncol=3)
+colnames(ObsHoNumbPup) = c("DRB","DQA","DQB")
+rownames(ObsHoNumbPup) = c("Obs.Hom25","Obs.Hom0.5momhom","Obs.Hom0.5dadhom","Obs.Hom0.5parhet")
+
+
+#Sum all observed homozygous puppies by locus from families with:
+#1. expected homozygosity 0.25
+#2. expected homozygosity 0.5 & mother homozygous and father heterozygous
+#3. expected homozygosity 0.5 & father homozygous and mother heterozygous
+#4. expected homozygosity 0.5 & both parents heterozygous for same alleles
+
+for (i in 1:3){
+	PupsameTemp<-PupsameMat[,i]
+	ObsHoNumbPup[1,i]<-sum(PupsameTemp[ExHo[,i]==0.25], na.rm=TRUE)
+	ObsHoNumbPup[2,i]<-sum(PupsameTemp[ExHo0.5momhom[,i]==0.5], na.rm=TRUE)
+	ObsHoNumbPup[3,i]<-sum(PupsameTemp[ExHo0.5dadhom[,i]==0.5], na.rm=TRUE)
+	ObsHoNumbPup[4,i]<-sum(PupsameTemp[ExHo0.5parhet[,i]==0.5], na.rm=TRUE)
+	}	
+
+
+#Make matrix for observed heterozygous puppies in all loci with different parental types
+
+ObsHeNumbPup<-matrix(nrow=4 , ncol=3)
+colnames(ObsHeNumbPup) = c("DRB","DQA","DQB")
+rownames(ObsHeNumbPup) = c("Obs.He0.75","Obs.He0.5momhom","Obs.He0.5dadhom","Obs.He0.5parhet")
+
+#make matrix for observed heterozygous offspring
+
+PupDiffMat<-matrix(nrow=rownr, ncol=3)
+colnames(PupDiffMat) = c("DRB","DQA","DQB")
+
+#loop through families to find how many puppies are heterozygous per parental type
+
+for (i in 1:3) { #kolme lokusta, 2 saraketta per lokus
+	for (k in families){
+		fam<-dat[dat$FamilyID==k,c((i*2-1),(i*2), which(colnames(dat)=="Relation"))]
+		alloffspring<-fam[fam$Relation=="offspring",c(1,2)]
+		PupDiffMat[k,i]<-pupdifferent(alloffspring)
+	}
+}
+
+for (i in 1:3){
+	PupDiffTemp<-PupDiffMat[,i]
+	ObsHeNumbPup[1,i]<-sum(PupDiffTemp[ExHo[,i]==0.25], na.rm=TRUE)
+	ObsHeNumbPup[2,i]<-sum(PupDiffTemp[ExHo0.5momhom[,i]==0.5], na.rm=TRUE)
+	ObsHeNumbPup[3,i]<-sum(PupDiffTemp[ExHo0.5dadhom[,i]==0.5], na.rm=TRUE)
+	ObsHeNumbPup[4,i]<-sum(PupDiffTemp[ExHo0.5parhet[,i]==0.5], na.rm=TRUE)
+}
+
+
+#make matrix for all expected homozygous puppies for different parental types
+
+ExpHoNumbPup<-matrix(nrow=4 , ncol=3)
+colnames(ExpHoNumbPup) = c("DRB","DQA","DQB")
+rownames(ExpHoNumbPup) = c("Exp.Hom25","Exp.Hom0.5momhom","Exp.Hom0.5dadhom","Exp.Hom0.5parhet")
+
+#Sum all expected homozygous puppies by locus from families with different parental types
+
+for (i in 1:3){
+	ExpHoNumbPup[1,i]<-(ObsHeNumbPup[1,i]+ObsHoNumbPup[1,i])*0.25
+	ExpHoNumbPup[2,i]<-(ObsHeNumbPup[2,i]+ObsHoNumbPup[2,i])/2
+	ExpHoNumbPup[3,i]<-(ObsHeNumbPup[3,i]+ObsHoNumbPup[3,i])/2
+	ExpHoNumbPup[4,i]<-(ObsHeNumbPup[4,i]+ObsHoNumbPup[4,i])/2
+	}	
+
+#How many offspring in total are in families potentially segregating for homozygotes?
+
+NpupsPotSegDRB<-sum(nrpups[ExHo[,1]==0.25 | ExHo0.5momhom[,1]==0.5 | ExHo0.5dadhom[,1]==0.5 | ExHo0.5parhet[,1]==0.5], na.rm=TRUE)
+NpupsPotSegDQA<-sum(nrpups[ExHo[,2]==0.25 | ExHo0.5momhom[,2]==0.5 | ExHo0.5dadhom[,2]==0.5 | ExHo0.5parhet[,2]==0.5], na.rm=TRUE)
+NpupsPotSegDQB<-sum(nrpups[ExHo[,3]==0.25 | ExHo0.5momhom[,3]==0.5 | ExHo0.5dadhom[,3]==0.5 | ExHo0.5parhet[,3]==0.5], na.rm=TRUE)
+
+#Make matrix for expected heterozygous puppies in all loci with different parental types
+
+ExpHeNumbPup<-matrix(nrow=4 , ncol=3)
+colnames(ExpHeNumbPup) = c("DRB","DQA","DQB")
+rownames(ExpHeNumbPup) = c("Exp.He0.75","Exp.He0.5momhom","Exp.He0.5dadhom","Exp.He0.5parhet")
+
+
+#loop through families to find out how many puppies are expected to be heterozygous per parental type
+
+for (i in 1:3){
+	ExpHeNumbPup[1,i]<-(ObsHeNumbPup[1,i]+ObsHoNumbPup[1,i])*0.75
+	ExpHeNumbPup[2,i]<-(ObsHeNumbPup[2,i]+ObsHoNumbPup[2,i])/2
+	ExpHeNumbPup[3,i]<-(ObsHeNumbPup[3,i]+ObsHoNumbPup[3,i])/2
+	ExpHeNumbPup[4,i]<-(ObsHeNumbPup[4,i]+ObsHoNumbPup[4,i])/2
+}
+
+#Does the observed homozygosity and heterozygosity differ from expected or not?
+#Khii2-test between expected and observed classes of different parental types
+#Loop through parental types and make chi2 test
+
+Chi2MatStat<-matrix(nrow=4 , ncol=3)
+colnames(Chi2MatStat) <- c("DRB","DQA","DQB")
+Chi2MatPvalue<-matrix(nrow=4 , ncol=3)
+colnames(Chi2MatPvalue) <- c("DRB","DQA","DQB")
+for (k in 1:3) {
+	for (i in 1:4){
+		a<-ObsHoNumbPup[i,k]
+		b<-ObsHeNumbPup[i,k] 
+		c<-ExpHoNumbPup[i,k]
+		d<-ExpHeNumbPup[i,k]
+		if(sum(a,b,c,d)==0){next}
+		Chi2MatStat[i,k]<-chisq.test(c(ObsHoNumbPup[i,k],ObsHeNumbPup[i,k]), 
+		p=c(ExpHoNumbPup[i,k],ExpHeNumbPup[i,k]),rescale.p=TRUE)$statistic 
+		Chi2MatPvalue[i,k]<-chisq.test(c(ObsHoNumbPup[i,k],ObsHeNumbPup[i,k]), 
+		p=c(ExpHoNumbPup[i,k],ExpHeNumbPup[i,k]),rescale.p=TRUE)$p.value
+	}
+}
+
+
+#Real number of puppies per parental type and locus
+NoPups<-vector(length=12)
+j<-0
+for (k in 1:3){
+	for (i in 1:4){
+	j<-j+1
+	NoPups[j]<-ObsHeNumbPup[i,k]+ObsHoNumbPup[i,k]
+	}
+}	
+
+#Make data.frame for observed and expected homozygosity and heterozygosity per locus and parental type:
+
+ObsHoNumbPuplist <- split(ObsHoNumbPup, col(ObsHoNumbPup))
+ObsHoNumbPuptemp <- unlist(ObsHoNumbPuplist)	
+ExpHoNumbPuplist <- split(ExpHoNumbPup, col(ExpHoNumbPup))
+ExpHoNumbPuptemp <- unlist(ExpHoNumbPuplist)
+ObsHeNumbPuplist <- split(ObsHeNumbPup, col(ObsHeNumbPup))
+ObsHeNumbPuptemp <- unlist(ObsHeNumbPuplist)
+ExpHeNumbPuplist <- split(ExpHeNumbPup, col(ExpHeNumbPup))
+ExpHeNumbPuptemp <- unlist(ExpHeNumbPuplist)
+Chi2MatStatlist <- split(Chi2MatStat, col(Chi2MatStat))
+Chi2MatStattemp <- unlist(Chi2MatStatlist)
+Chi2MatPvaluelist <- split(Chi2MatPvalue, col(Chi2MatPvalue))
+Chi2MatPvaluetemp <- unlist(Chi2MatPvaluelist)
+
+
+HomozygosityResults <- data.frame(
+	ParentalType = c("A1AzxA1Ax","A1A1xA1Ax","A1AzxA1A1","A1A2xA1A2","A1AzxA1Ax","A1A1xA1Ax",
+	"A1AzxA1A1","A1A2xA1A2","A1AzxA1Ax","A1A1xA1Ax","A1AzxA1A1","A1A2xA1A2"),
+	Locus = c("DRB1","DRB1","DRB1","DRB1","DQA1","DQA1","DQA1","DQA1","DQB1","DQB1","DQB1","DQB1"),
+	Obs.hom. = ObsHoNumbPuptemp,
+	Exp.hom. = ExpHoNumbPuptemp,
+	Obs.het. = ObsHeNumbPuptemp,
+	Exp.het. = ExpHeNumbPuptemp,
+	Chi2 = Chi2MatStattemp,
+	Chi2.p = Chi2MatPvaluetemp,
+	N.pups = NoPups
+)
+
+
+#Add column to data file for parental type (exp homozygosity) in each locus
+
+dat["ParentType_DRB"] <- NA
+dat["ParentType_DQA"] <- NA
+dat["ParentType_DQB"] <- NA
+
+#Loop through families to add parental type in the data file
+
+for (k in 1:3){
+	famIDif0.25 <- which(ExHo[,k]==0.25)
+	famIDif0.00 <- which(ExHo[,k]==0.00)
+	famIDif1.00 <- which(ExHo[,k]==1.00)
+	famIDifmom0.50 <- which(ExHo0.5momhom[,k]==0.50)
+	famIDifdad0.50 <- which(ExHo0.5dadhom[,k]==0.50)
+	famIDifpar0.50 <- which(ExHo0.5parhet[,k]==0.50)
+
+	for (i in families){
+		for (i in famIDif0.25){
+		dat[dat$FamilyID==i,k+12] <- "A1AzxA1Ax"
+		}
+		for (i in famIDif0.00){
+		dat[dat$FamilyID==i,k+12] <- "0"
+		}
+		for (i in famIDif1.00){
+		dat[dat$FamilyID==i,k+12] <- "A1A1xA1A1"
+		}
+		for (i in famIDifmom0.50){
+		dat[dat$FamilyID==i,k+12] <- "A1A1xA1Ax"
+		}
+		for (i in famIDifdad0.50){
+		dat[dat$FamilyID==i,k+12] <- "A1AzxA1A1"
+		}
+		for (i in famIDifpar0.50){
+		dat[dat$FamilyID==i,k+12] <- "A1A2xA1A2"
+		}
+	}
+}
+
+
+#Looping through families to find out if the offspring and mother share both alleles. 
+
+dat["SameAllele_DRB"] <- NA
+dat["SameAllele_DQA"] <- NA
+dat["SameAllele_DQB"] <- NA
+
+
+for (i in 1:3){
+	locusname<-substr(colnames(dat)[i*2],1,3) 
+	for (k in families){
+		fami <- dat[dat$FamilyID==k,c((i*2-1),(i*2), which(colnames(dat)=="Relation"), 
+		which(colnames(dat)==paste("ParentType",locusname,sep="_")))]
+		fami[is.na(fami)]<-"NA"
+		for (j in 1:nrpups[k]){
+		if (fami[1,4]=="A1AzxA1Ax") {dat[dat$FamilyID==k & dat$PupID==j,
+		which(colnames(dat)==paste("SameAllele",locusname,sep="_"))] <- SharedAl0.25(fami[c(1,j+2),c(1,2)])}
+		if (fami[1,4]=="A1A1xA1Ax") {dat[dat$FamilyID==k & dat$PupID==j,
+		which(colnames(dat)==paste("SameAllele",locusname,sep="_"))] <- SharedAl0.5momhom(fami[c(1,j+2),c(1,2)])}
+		} 
+	}
+}
+
+
+#How many puppies share their alleles with mother
+DRBSameA1AzxA1Ax <- na.omit(dat[dat$SameAllele_DRB=="TRUE" & dat$ParentType_DRB=="A1AzxA1Ax",c(which(colnames(dat)==
+"ParentType_DRB"),which(colnames(dat)=="SameAllele_DRB"))])
+DRBSameA1A1xA1Ax <- na.omit(dat[dat$SameAllele_DRB=="TRUE" & dat$ParentType_DRB=="A1A1xA1Ax",c(which(colnames(dat)==
+"ParentType_DRB"),which(colnames(dat)=="SameAllele_DRB"))])
+DQASameA1AzxA1Ax <- na.omit(dat[dat$SameAllele_DQA=="TRUE" & dat$ParentType_DQA=="A1AzxA1Ax",c(which(colnames(dat)==
+"ParentType_DQA"),which(colnames(dat)=="SameAllele_DQA"))])
+DQASameA1A1xA1Ax <- na.omit(dat[dat$SameAllele_DQA=="TRUE" & dat$ParentType_DQA=="A1A1xA1Ax",c(which(colnames(dat)==
+"ParentType_DQA"),which(colnames(dat)=="SameAllele_DQA"))])
+DQBSameA1AzxA1Ax <- na.omit(dat[dat$SameAllele_DQB=="TRUE" & dat$ParentType_DQB=="A1AzxA1Ax",c(which(colnames(dat)==
+"ParentType_DQB"),which(colnames(dat)=="SameAllele_DQB"))])
+DQBSameA1A1xA1Ax <- na.omit(dat[dat$SameAllele_DQB=="TRUE" & dat$ParentType_DQB=="A1A1xA1Ax",c(which(colnames(dat)==
+"ParentType_DQB"),which(colnames(dat)=="SameAllele_DQB"))])
+
+#How many puppies don't share their alleles with mother
+DRBDiffA1AzxA1Ax <- na.omit(dat[dat$SameAllele_DRB=="FALSE" & dat$ParentType_DRB=="A1AzxA1Ax",c(which(colnames(dat)==
+"ParentType_DRB"),which(colnames(dat)=="SameAllele_DRB"))])
+DRBDiffA1A1xA1Ax <- na.omit(dat[dat$SameAllele_DRB=="FALSE" & dat$ParentType_DRB=="A1A1xA1Ax",c(which(colnames(dat)==
+"ParentType_DRB"),which(colnames(dat)=="SameAllele_DRB"))])
+DQADiffA1AzxA1Ax <- na.omit(dat[dat$SameAllele_DQA=="FALSE" & dat$ParentType_DQA=="A1AzxA1Ax",c(which(colnames(dat)==
+"ParentType_DQA"),which(colnames(dat)=="SameAllele_DQA"))])
+DQADiffA1A1xA1Ax <- na.omit(dat[dat$SameAllele_DQA=="FALSE" & dat$ParentType_DQA=="A1A1xA1Ax",c(which(colnames(dat)==
+"ParentType_DQA"),which(colnames(dat)=="SameAllele_DQA"))])
+DQBDiffA1AzxA1Ax <- na.omit(dat[dat$SameAllele_DQB=="FALSE" & dat$ParentType_DQB=="A1AzxA1Ax",c(which(colnames(dat)==
+"ParentType_DQB"),which(colnames(dat)=="SameAllele_DQB"))])
+DQBDiffA1A1xA1Ax <- na.omit(dat[dat$SameAllele_DQB=="FALSE" & dat$ParentType_DQB=="A1A1xA1Ax",c(which(colnames(dat)==
+"ParentType_DQB"),which(colnames(dat)=="SameAllele_DQB"))])
+
+N.pups <- c(sum(length(DRBSameA1AzxA1Ax$SameAllele_DRB),length(DRBDiffA1AzxA1Ax$SameAllele_DRB)),
+	sum(length(DRBSameA1A1xA1Ax$SameAllele_DRB),length(DRBDiffA1A1xA1Ax$SameAllele_DRB)),
+	sum(length(DQASameA1AzxA1Ax$SameAllele_DQA),length(DQADiffA1AzxA1Ax$SameAllele_DQA)),
+	sum(length(DQASameA1A1xA1Ax$SameAllele_DQA),length(DQADiffA1A1xA1Ax$SameAllele_DQA)),
+	sum(length(DQBSameA1AzxA1Ax$SameAllele_DQB),length(DQBDiffA1AzxA1Ax$SameAllele_DQB)),
+	sum(length(DQBSameA1A1xA1Ax$SameAllele_DQB),length(DQBDiffA1A1xA1Ax$SameAllele_DQB)))
+
+
+#Make data.frame for puppy vs. mom shared alleles results
+
+MomSharedResults <- data.frame(
+	ParentalType = c("A1AzxA1Ax","A1A1xA1Ax","A1AzxA1Ax","A1A1xA1Ax","A1AzxA1Ax","A1A1xA1Ax"),
+	Locus = c("DRB1","DRB1","DQA1","DQA1","DQB1","DQB1"),
+	Obs.same = c(length(DRBSameA1AzxA1Ax$SameAllele_DRB),length(DRBSameA1A1xA1Ax$SameAllele_DRB),
+	length(DQASameA1AzxA1Ax$SameAllele_DQA),length(DQASameA1A1xA1Ax$SameAllele_DQA),
+	length(DQBSameA1AzxA1Ax$SameAllele_DQB),length(DQBSameA1A1xA1Ax$SameAllele_DQB)),
+	Exp.same = c(0.5*N.pups[1],0.5*N.pups[2],0.5*N.pups[3],0.5*N.pups[4],0.5*N.pups[5],0.5*N.pups[6]),
+	Obs.different = c(length(DRBDiffA1AzxA1Ax$SameAllele_DRB),length(DRBDiffA1A1xA1Ax$SameAllele_DRB),
+	length(DQADiffA1AzxA1Ax$SameAllele_DQA),length(DQADiffA1A1xA1Ax$SameAllele_DQA),
+	length(DQBDiffA1AzxA1Ax$SameAllele_DQB),length(DQBDiffA1A1xA1Ax$SameAllele_DQB)),
+	Exp.different = c(0.5*N.pups[1],0.5*N.pups[2],0.5*N.pups[3],0.5*N.pups[4],0.5*N.pups[5],0.5*N.pups[6])
+)
+
+#Does mother’s heterozygosity affect the outcome of the allele the puppy has got?
+#chi2? between the two classes (A1AzxA1Ax vs. A1A1xA1Ax)
+
+Chi2MomStat <- matrix(nrow=6, ncol=1)
+rownames(Chi2MomStat) <- c("DRB","DRB","DQA","DQA","DQB","DQB")
+Chi2MomPvalue<-matrix(nrow=6 , ncol=1)
+rownames(Chi2MomPvalue) <- c("DRB","DRB","DQA","DQA","DQB","DQB")
+
+for (k in 1:6) {
+	a<-MomSharedResults[k,3]
+	b<-MomSharedResults[k,5] 
+	c<-MomSharedResults[k,4]
+	d<-MomSharedResults[k,6]
+	if(sum(a,b,c,d)==0){next}
+	Chi2MomStat[k,1]<-chisq.test(c(MomSharedResults[k,3],
+	MomSharedResults[k,5]), 
+	p=c(MomSharedResults[k,4],MomSharedResults[k,6]),rescale.p=TRUE)$statistic 
+	Chi2MomPvalue[k,1]<-chisq.test(c(MomSharedResults[k,3],
+	MomSharedResults[k,5]), 
+	p=c(MomSharedResults[k,4],MomSharedResults[k,6]),rescale.p=TRUE)$p.value
+}
+
+
+#Update data.frame MomSharedResults for Chi2 results of puppy vs. mom shared alleles
+
+MomSharedResults["Chi2"] <- Chi2MomStat[,1]
+MomSharedResults["Chi2.p"] <- Chi2MomPvalue[,1]
+MomSharedResults["N.pups"] <- N.pups
+
+
+#Combine locus-wise all litters where mother is heterozygous to find if mother's heterozygosity 
+#affects the offspring heterozygosity?
+
+MomhetComb <- matrix(nrow=3, ncol=6)
+rownames(MomhetComb) <- c("DRB1","DQA1","DQB1")
+colnames(MomhetComb) <- c("Obs.hom","Exp.hom","Obs.het","Exp.het","Chi2","Chi2.p")
+
+#Loop through HomozygosityResults data.frame to count locus-wise all offspring with heterozygous mother
+#and make Chi2 test.
+
+for (i in 1:3){
+	for (k in 1:4){
+	MomhetComb[i,k]<-HomozygosityResults[i*4-3,k+2]+HomozygosityResults[i*4-1,k+2]+HomozygosityResults[i*4,k+2]
+	}
+}
+
+for (i in 1:3) {
+	a<-MomhetComb[i,1]
+	b<-MomhetComb[i,3] 
+	c<-MomhetComb[i,2]
+	d<-MomhetComb[i,4]
+	if(sum(a,b,c,d)==0){next}
+	MomhetComb[i,5]<-chisq.test(c(MomhetComb[i,1],MomhetComb[i,3]), 
+	p=c(MomhetComb[i,2],MomhetComb[i,4]),rescale.p=TRUE)$statistic 
+	MomhetComb[i,6]<-chisq.test(c(MomhetComb[i,1],MomhetComb[i,3]), 
+	p=c(MomhetComb[i,2],MomhetComb[i,4]),rescale.p=TRUE)$p.value
+}
+
+
+########################
+
+#OUTPUTS for PBR analyses
+
+#Observed and expected homozygosity and Chi2 test results
+#write.table(HomozygosityResults,file=file.path("K:/My Documents/DLA/MHC perhedata/Tulokset/",paste("DogFamilyChi2Results","PBR",m,".txt",sep="_")), col.names=TRUE, quote=FALSE, row.names=FALSE, sep="\t")
+
+#Observed and expected homozygosity, litters with heterozygous mother
+#write.table(MomhetComb,file=file.path("K:/My Documents/DLA/MHC perhedata/Tulokset/",paste("DogFamilyMomHetCombResults","PBR",m,".txt",sep="_")), col.names=TRUE, quote=FALSE, sep="\t")
+
+#Observed and expected puppies, with shared alleles with mom
+#write.table(MomSharedResults,file=file.path("K:/My Documents/DLA/MHC perhedata/Tulokset/",paste("DogFamilyMomSharedResults","PBR",m,".txt",sep="_")), col.names=TRUE, quote=FALSE, 
+#row.names=FALSE, sep="\t")
+
+#Data-file with added information (pupID, parental type, same allele from father and mother)
+#write.table(dat,file=file.path("K:/My Documents/DLA/MHC perhedata/Tulokset/",paste("DogFamilyDataWAdditions","PBR",m,".txt",sep="_")), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
+
+
+#}
+#End of amino acid analyses!
+
+
+
+########################
+
+#OUTPUTS
+
+#Observed and expected homozygosity and Chi2 test results
+write.table(HomozygosityResults,file="K:/My Documents/DLA/MHC perhedata/Tulokset/DogFamilyChi2ResultsKromfohrlander.txt", col.names=TRUE, quote=FALSE, row.names=FALSE, sep="\t")
+
+#Observed and expected homozygosity, litters with heterozygous mother
+write.table(MomhetComb,file="K:/My Documents/DLA/MHC perhedata/Tulokset/DogFamilyMomHetCombResultsKromfohrlander.txt", col.names=TRUE, quote=FALSE, sep="\t")
+
+#Observed and expected puppies, with shared alleles with mom
+write.table(MomSharedResults,file="K:/My Documents/DLA/MHC perhedata/Tulokset/DogFamilyMomSharedResultsKromfohrlander.txt", col.names=TRUE, quote=FALSE, 
+row.names=FALSE, sep="\t")
+
+#Data-file with added information (pupID, parental type, same allele from father and mother)
+write.table(dat,file="K:/My Documents/DLA/MHC perhedata/Tulokset/DogFamilyDataWAdditionsKromfohrlander.txt", col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
+
+
+
